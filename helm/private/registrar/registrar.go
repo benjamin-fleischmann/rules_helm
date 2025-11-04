@@ -47,7 +47,8 @@ func runHelm(helmPath string, args []string, pluginsDir string, stdin *string) {
 }
 
 func getUrlFromFile(inputURLFile string) (string, error) {
-	data, err := os.ReadFile(inputURLFile)
+	runfilePath := helm_utils.GetRunfile(inputURLFile)
+	data, err := os.ReadFile(runfilePath)
 	if err != nil {
 		return "", fmt.Errorf("Error reading file: %w", err)
 	}

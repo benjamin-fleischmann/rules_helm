@@ -67,6 +67,7 @@ def _helm_push_impl(ctx):
     runfiles = ctx.runfiles([
         registrar,
         args_file,
+        ctx.file.registry_url_file,
         toolchain.helm,
         toolchain.helm_plugins,
         pkg_info.chart,

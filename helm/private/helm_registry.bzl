@@ -37,7 +37,10 @@ def _helm_push_impl(ctx):
     args.add("-helm", rlocationpath(toolchain.helm, ctx.workspace_name))
     args.add("-helm_plugins", rlocationpath(toolchain.helm_plugins, ctx.workspace_name))
     args.add("-chart", rlocationpath(pkg_info.chart, ctx.workspace_name))
-    args.add("-registry_url", ctx.attr.registry_url)
+    if ctx.attr.registry_url_file:
+        args.add("-registry_url_file", rlocationpath(ctx.file.registry_url_file, ctx.workspace_name))
+    else:
+        args.add("-registry_url", ctx.attr.registry_url)
 
     if ctx.attr.login_url:
         args.add("-login_url", ctx.attr.login_url)
@@ -114,7 +117,12 @@ if the following environment variables are defined:
         ),
         "registry_url": attr.string(
             doc = "The registry URL at which to push the helm chart to. E.g. `oci://my.registry.io/chart-name`",
-            mandatory = True,
+            mandatory = False,
+        ),
+        "registry_url_file": attr.label(
+            doc = "A file containing the registry URL at which to push the helm chart",
+            mandatory = False,
+            allow_single_file = True,
         ),
         "_copier": attr.label(
             cfg = "exec",

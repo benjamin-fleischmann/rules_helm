@@ -46,6 +46,18 @@ func runHelm(helmPath string, args []string, pluginsDir string, stdin *string) {
 	}
 }
 
+func getUrlFromFile(inputURLFile string) (string, error) {
+	data, err := os.ReadFile(inputURLFile)
+	if err != nil {
+		return "", fmt.Errorf("Error reading file: %w", err)
+	}
+
+	content := string(data)
+
+	strippedContent := strings.TrimSpace(content)
+	return strippedContent, nil
+}
+
 func main() {
 	// Get the file path for args
 	argsRlocation := os.Getenv("RULES_HELM_HELM_PUSH_ARGS_FILE")
@@ -65,6 +77,7 @@ func main() {
 	rawHelmPluginsPath := flag.String("helm_plugins", "", "The path to helm plugins.")
 	rawChartPath := flag.String("chart", "", "Path to Helm .tgz file")
 	registryURL := flag.String("registry_url", "", "URL of registry to upload helm chart")
+	registryURLFile := flag.String("registry_url_file", "", "File containing the URL of registry to upload helm chart")
 	rawLoginURL := flag.String("login_url", "", "URL of registry to login to.")
 	pushCmd := flag.String("push_cmd", "push", "Command to publish helm chart.")
 	rawImagePushers := flag.String("image_pushers", "", "Comma-separated list of image pusher executables")
@@ -73,8 +86,19 @@ func main() {
 	flag.CommandLine.Parse(argv)
 
 	// Check required arguments
-	if *rawHelmPath == "" || *rawChartPath == "" || *registryURL == "" {
-		log.Fatalf("Missing required arguments: helm, chart, registry_url")
+	if *rawHelmPath == "" || *rawChartPath == "" {
+		log.Fatalf("Missing required arguments: helm, chart")
+	}
+
+	if (*registryURL == "" && *registryURLFile == "") || (*registryURL != "" && *registryURLFile != "") {
+		log.Fatalf("Exactly one of registry_url and  registry_url_file needs to be specified ")
+	}
+
+	if *registryURLFile != "" {
+		*registryURL, err = getUrlFromFile(*registryURLFile)
+		if err != nil {
+			log.Fatalf("Failed to get registry URL from file: %v", err)
+		}
 	}
 
 	helmPath := helm_utils.GetRunfile(*rawHelmPath)
